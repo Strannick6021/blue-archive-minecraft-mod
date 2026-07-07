@@ -1,1 +1,20 @@
-{\n  \"type\": \"minecraft:entity\",\n  \"pools\": [\n    {\n      \"rolls\": 1,\n      \"entries\": [\n        {\n          \"type\": \"minecraft:item\",\n          \"name\": \"minecraft:diamond\",\n          \"weight\": 5\n        },\n        {\n          \"type\": \"minecraft:item\",\n          \"name\": \"minecraft:emerald\",\n          \"weight\": 3\n        }\n      ]\n    }\n  ]\n}
+{
+  "type": "minecraft:entity",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:diamond",
+          "weight": 5
+        },
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:emerald",
+          "weight": 3
+        }
+      ]
+    }
+  ]
+}

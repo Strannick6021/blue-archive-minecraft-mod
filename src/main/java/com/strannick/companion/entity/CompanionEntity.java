@@ -9,6 +9,8 @@ import net.minecraft.world.entity.ai.goal.*;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerLevelAccessor;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundSource;
@@ -50,7 +52,7 @@ public class CompanionEntity extends Mob {
         this.companionAI = new CompanionAI(this);
     }
 
-    public static boolean checkCompanionSpawnRules(EntityType<CompanionEntity> entityType, ServerLevelAccessor level, MobSpawnType spawnType, net.minecraft.world.level.block.state.BlockState blockState, net.minecraft.core.BlockPos pos) {
+    public static boolean checkCompanionSpawnRules(EntityType<CompanionEntity> entityType, ServerLevelAccessor level, MobSpawnType spawnType, BlockState blockState, BlockPos pos) {
         return level.getRawBrightness(pos, 0) > 8;
     }
 

@@ -1,1 +1,26 @@
-{\n  \"parent\": \"item/handheld\",\n  \"textures\": {\n    \"layer0\": \"companion:item/shotgun\"\n  },\n  \"display\": {\n    \"thirdperson_righthand\": {\n      \"rotation\": [0, -90, 25],\n      \"translation\": [0, 1.13, -2],\n      \"scale\": [0.85, 0.85, 0.85]\n    },\n    \"thirdperson_lefthand\": {\n      \"rotation\": [0, 90, -25],\n      \"translation\": [0, 1.13, 2],\n      \"scale\": [0.85, 0.85, 0.85]\n    },\n    \"firstperson_righthand\": {\n      \"rotation\": [0, -90, 25],\n      \"translation\": [1.13, 3.2, 1.13]\n    },\n    \"firstperson_lefthand\": {\n      \"rotation\": [0, 90, -25],\n      \"translation\": [-1.13, 3.2, 1.13]\n    }\n  }\n}
+{
+  "parent": "item/handheld",
+  "textures": {
+    "layer0": "companion:item/shotgun"
+  },
+  "display": {
+    "thirdperson_righthand": {
+      "rotation": [0, -90, 25],
+      "translation": [0, 1.13, -2],
+      "scale": [0.85, 0.85, 0.85]
+    },
+    "thirdperson_lefthand": {
+      "rotation": [0, 90, -25],
+      "translation": [0, 1.13, 2],
+      "scale": [0.85, 0.85, 0.85]
+    },
+    "firstperson_righthand": {
+      "rotation": [0, -90, 25],
+      "translation": [1.13, 3.2, 1.13]
+    },
+    "firstperson_lefthand": {
+      "rotation": [0, 90, -25],
+      "translation": [-1.13, 3.2, 1.13]
+    }
+  }
+}

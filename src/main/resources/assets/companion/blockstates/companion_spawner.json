@@ -1,1 +1,7 @@
-{\n  \"variants\": {\n    \"\": {\n      \"model\": \"companion:block/companion_spawner\"\n    }\n  }\n}
+{
+  "variants": {
+    "": {
+      "model": "companion:block/companion_spawner"
+    }
+  }
+}

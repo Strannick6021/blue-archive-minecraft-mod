@@ -5,17 +5,15 @@ import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
-import net.minecraftforge.fml.javafxmod.FXModLanguageProvider;
 import net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent;
 import net.minecraftforge.fml.loading.FMLEnvironment;
-import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.fml.javafxmod.FXModLanguageProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.strannick.companion.registry.ModEntities;
 import com.strannick.companion.registry.ModItems;
 import com.strannick.companion.registry.ModSounds;
-import com.strannick.companion.event.CompanionEvents;
 
 @Mod("companion")
 public class CompanionMod {
@@ -25,13 +23,7 @@ public class CompanionMod {
     public CompanionMod(FXModLanguageProvider.ModContainer modContainer) {
         IEventBus modEventBus = modContainer.getEventBus();
 
-        // Регистрируем события
-        modEventBus.addListener(this::commonSetup);
-        modEventBus.addListener(this::loadComplete);
-
-        if (FMLEnvironment.getDist() == Dist.CLIENT) {
-            modEventBus.addListener(this::clientSetup);
-        }
+        LOGGER.info("CompanionMod инициализирован!");
 
         // Регистрируем отложенные реестры
         ModItems.ITEMS.register(modEventBus);
@@ -39,19 +31,15 @@ public class CompanionMod {
         ModSounds.SOUNDS.register(modEventBus);
 
         // Регистрируем события
-        net.minecraftforge.fml.ModLoadingContext.get().registerConfig(
-                net.minecraftforge.fml.config.ModConfig.Type.COMMON,
-                com.strannick.companion.config.CompanionConfig.SPEC
-        );
-
-        LOGGER.info("CompanionMod инициализирован!");
+        modEventBus.addListener(this::commonSetup);
+        if (FMLEnvironment.getDist() == Dist.CLIENT) {
+            modEventBus.addListener(this::clientSetup);
+        }
+        modEventBus.addListener(this::loadComplete);
     }
 
     private void commonSetup(final FMLCommonSetupEvent event) {
-        LOGGER.info("Общая ин��циализация CompanionMod");
-        event.enqueueWork(() -> {
-            // Регистрируем кастомные приказы компаньона
-        });
+        LOGGER.info("Общая инициализация CompanionMod");
     }
 
     private void clientSetup(final FMLClientSetupEvent event) {

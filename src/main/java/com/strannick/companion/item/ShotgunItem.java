@@ -17,7 +17,7 @@ public class ShotgunItem extends Item {
     private static final String AMMO_TAG = "Ammo";
     private static final String COOLDOWN_TAG = "Cooldown";
     private static final int MAX_AMMO = 8;
-    private static final int FIRE_COOLDOWN = 20; // тики (1 секунда)
+    private static final int FIRE_COOLDOWN = 20;
     private static final float DAMAGE = 12.0f;
     private static final float RANGE = 32.0f;
     private static final int PELLETS = 8;
