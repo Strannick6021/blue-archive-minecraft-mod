@@ -8,18 +8,29 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
-import net.minecraft.world.item.ItemStack;
 
 import com.strannick.companion.entity.CompanionEntity;
+import com.strannick.companion.config.CompanionConfig;
 
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * AI система компаньона с оптимизированной навигацией
+ * Кеширует результаты для минимальной нагрузки на сервер
+ */
 public class CompanionAI {
     private final CompanionEntity companion;
     private CompanionState currentState = CompanionState.IDLE;
     private BlockPos targetBlock = null;
     private LivingEntity targetEnemy = null;
     private int actionCooldown = 0;
+    private int searchCooldown = 0; // Кеш для поиска
+    private List<BlockPos> cachedMineableBlocks = new ArrayList<>();
+    
     private static final int SEARCH_RADIUS = 32;
     private static final int ATTACK_COOLDOWN = 20;
+    private static final int SEARCH_CACHE_TIME = 100; // Кеш на 5 секунд (100 тиков / 20)
 
     public enum CompanionState {
         IDLE, FOLLOWING, MINING, DEFENDING, ATTACKING, NAVIGATING
@@ -32,10 +43,15 @@ public class CompanionAI {
     public void update() {
         if (companion.level().isClientSide) return;
 
+        // Обновляем кулдауны
         if (actionCooldown > 0) {
             actionCooldown--;
         }
+        if (searchCooldown > 0) {
+            searchCooldown--;
+        }
 
+        // Основной цикл AI
         switch (currentState) {
             case IDLE:
                 updateIdle();
@@ -69,20 +85,31 @@ public class CompanionAI {
         Player owner = companion.getOwnerPlayer();
         if (owner == null) return;
 
+        // Если далеко - телепортируемся
         if (companion.distanceTo(owner) > 50.0f) {
             companion.teleportTo(owner.getX(), owner.getY(), owner.getZ());
-        } else if (companion.distanceTo(owner) < 2.0f) {
+        }
+        // Если близко - просто стоим
+        else if (companion.distanceTo(owner) < 2.0f) {
             companion.getNavigation().stop();
-        } else {
+        }
+        // Иначе идём к владельцу
+        else {
             companion.getNavigation().moveTo(owner.getX(), owner.getY(), owner.getZ(), 1.0f);
         }
 
+        // Проверяем врагов - если вражеские мобы близко, переходим в режим защиты
         checkForEnemies();
     }
 
     private void updateMining() {
+        // Если нет целевого блока - ищем новый
         if (targetBlock == null || !isMineableBlock(companion.level().getBlockState(targetBlock).getBlock())) {
-            findNearestMineableBlock();
+            if (searchCooldown <= 0) {
+                findNearestMineableBlock();
+                searchCooldown = SEARCH_CACHE_TIME;
+            }
+            
             if (targetBlock == null) {
                 currentState = CompanionState.FOLLOWING;
                 companion.sayDialog(CompanionDialogs.TASK_COMPLETE);
@@ -90,13 +117,16 @@ public class CompanionAI {
             }
         }
 
+        // Проверяем расстояние до блока
         double distToBlock = companion.distanceToSqr(Vec3.atCenterOf(targetBlock));
         if (distToBlock < 4.0) {
+            // Добываем блок
             if (actionCooldown <= 0) {
                 breakBlock(targetBlock);
                 actionCooldown = 5;
             }
         } else {
+            // Идём к блоку
             navigateToBlock(targetBlock);
         }
     }
@@ -108,32 +138,16 @@ public class CompanionAI {
             return;
         }
 
-        AABB searchArea = new AABB(
-                companion.getX() - SEARCH_RADIUS,
-                companion.getY() - SEARCH_RADIUS,
-                companion.getZ() - SEARCH_RADIUS,
-                companion.getX() + SEARCH_RADIUS,
-                companion.getY() + SEARCH_RADIUS,
-                companion.getZ() + SEARCH_RADIUS
-        );
-
-        LivingEntity nearestEnemy = null;
-        double minDistance = Double.MAX_VALUE;
-
-        for (LivingEntity entity : companion.level().getEntitiesOfClass(LivingEntity.class, searchArea)) {
-            if (entity instanceof Monster && entity != companion && entity != owner) {
-                double dist = companion.distanceToSqr(entity);
-                if (dist < minDistance) {
-                    minDistance = dist;
-                    nearestEnemy = entity;
-                }
-            }
+        // Проверяем врагов в радиусе - с оптимизацией
+        if (searchCooldown <= 0) {
+            checkForEnemiesOptimized();
+            searchCooldown = SEARCH_CACHE_TIME / 2; // Проверяем врагов чаще
         }
 
-        if (nearestEnemy != null) {
-            targetEnemy = nearestEnemy;
+        if (targetEnemy != null && !targetEnemy.isDeadOrDying()) {
             currentState = CompanionState.ATTACKING;
         } else {
+            // Остаёмся рядом с владельцем в режиме защиты
             if (companion.distanceTo(owner) > 15.0f) {
                 companion.getNavigation().moveTo(owner.getX(), owner.getY(), owner.getZ(), 1.0f);
             } else {
@@ -154,14 +168,17 @@ public class CompanionAI {
             return;
         }
 
+        // Идём к врагу
         companion.getNavigation().moveTo(targetEnemy, 1.0f);
 
+        // Атакуем, если близко
         if (companion.distanceTo(targetEnemy) < 3.0f && actionCooldown <= 0) {
             companion.doHurtTarget(targetEnemy);
             actionCooldown = ATTACK_COOLDOWN;
             companion.sayDialog(CompanionDialogs.ENEMY_NEARBY);
         }
 
+        // Если враг далеко и мы его потеряли - переходим обратно в защиту
         if (companion.distanceTo(targetEnemy) > SEARCH_RADIUS) {
             targetEnemy = null;
             currentState = CompanionState.DEFENDING;
@@ -179,14 +196,18 @@ public class CompanionAI {
         }
     }
 
+    // ===== Приказы =====
+
     public boolean orderMining(String blockType) {
         currentState = CompanionState.MINING;
         targetBlock = null;
+        searchCooldown = 0; // Сразу ищем блоки
         return true;
     }
 
     public void orderDefense() {
         currentState = CompanionState.DEFENDING;
+        searchCooldown = 0;
     }
 
     public void orderFollow() {
@@ -195,7 +216,9 @@ public class CompanionAI {
         targetEnemy = null;
     }
 
-    private void checkForEnemies() {
+    // ===== Вспомогательные методы (оптимизированные) =====
+
+    private void checkForEnemiesOptimized() {
         AABB searchArea = new AABB(
                 companion.getX() - 16.0,
                 companion.getY() - 16.0,
@@ -208,7 +231,6 @@ public class CompanionAI {
         for (LivingEntity entity : companion.level().getEntitiesOfClass(LivingEntity.class, searchArea)) {
             if (entity instanceof Monster) {
                 targetEnemy = entity;
-                currentState = CompanionState.ATTACKING;
                 return;
             }
         }
@@ -219,6 +241,8 @@ public class CompanionAI {
         double minDistance = Double.MAX_VALUE;
         BlockPos nearest = null;
 
+        // Оптимизированный поиск: проверяем блоки с шагом 2
+        // Это снижает количество проверок с ~262k до ~32k
         for (int x = -SEARCH_RADIUS; x <= SEARCH_RADIUS; x += 2) {
             for (int y = -SEARCH_RADIUS; y <= SEARCH_RADIUS; y += 2) {
                 for (int z = -SEARCH_RADIUS; z <= SEARCH_RADIUS; z += 2) {
@@ -253,7 +277,6 @@ public class CompanionAI {
 
     private void breakBlock(BlockPos target) {
         companion.level().destroyBlock(target, true);
-        companion.sayDialog(CompanionDialogs.MINING_START);
         targetBlock = null;
     }
 
