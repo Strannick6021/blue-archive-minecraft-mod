@@ -1,0 +1,68 @@
+plugins {
+    id 'java'
+    id 'net.minecraftforge.gradle' version '[6.0,6.2)'
+    id 'org.parchmentmc.librarian' version '1.+'
+}
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+
+group = 'com.strannick.companion'
+version = '1.0.0'
+archivesBaseName = 'BlueArchiveCompanion'
+
+minecraft {
+    mappings channel: 'parchment', version: '1.21-2024.07.28-v0'
+    
+    runs {
+        client {
+            workingDirectory project.file('run')
+            property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
+            property 'forge.logging.level.net.minecraftforge', 'debug'
+            mods {
+                companion {
+                    source sourceSets.main
+                }
+            }
+        }
+        server {
+            workingDirectory project.file('run')
+            property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
+            property 'forge.logging.level.net.minecraftforge', 'debug'
+            mods {
+                companion {
+                    source sourceSets.main
+                }
+            }
+        }
+    }
+}
+
+repositories {
+    maven { url 'https://maven.minecraftforge.net' }
+    maven { url 'https://maven.parchmentmc.org' }
+    maven { url 'https://repo.maven.apache.org/maven2' }
+    maven { url 'https://maven.tterrag.com/' }
+}
+
+dependencies {
+    minecraft 'net.minecraftforge:forge:1.21-51.0.0'
+    
+    // GeckoLib для анимаций
+    implementation 'software.bernie.geckolib:geckolib-forge-1.21:4.1.0'
+}
+
+tasks.named('jar', Jar).configure {
+    manifest {
+        attributes([
+                'Specification-Title'      : 'BlueArchiveCompanion',
+                'Specification-Vendor'     : 'Strannick',
+                'Specification-Version'    : '1',
+                'Implementation-Title'     : project.name,
+                'Implementation-Version'   : project.jar.archiveVersion,
+                'Implementation-Vendor'    : 'Strannick',
+                'Implementation-Timestamp' : new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
+        ])
+    }
+}
+
+jar.finalizedBy 'reobfJar'

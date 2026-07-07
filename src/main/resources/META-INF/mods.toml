@@ -1,0 +1,27 @@
+modLoader="javafxmod"
+loaderVersion="[51,)"
+license="MIT"
+
+[[mods]]
+modId="companion"
+version="1.0.0"
+displayName="Blue Archive Companion Mod"
+displayURL="https://github.com/Strannick6021/blue-archive-minecraft-mod"
+logoFile="assets/companion/logo.png"
+credits="Created by Strannick"
+authors="Strannick"
+description="""Adds customizable companions with weapons and combat system to Minecraft. Includes droboviks, shields, and companion AI for mining, defense, and support."""
+
+[[dependencies.companion]]
+modId="forge"
+mandatory=true
+versionRange="[51,)"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.companion]]
+modId="minecraft"
+mandatory=true
+versionRange="[1.21,1.22)"
+ordering="NONE"
+side="BOTH"
